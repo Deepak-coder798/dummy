@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const ConnectDB = require('./config/ConnectDB')
 const {Signup, Login} = require('./controllers/User.Controller')
+const {CreatePost, getPost} = require('./controllers/Post.Controller')
 const varifyToken = require('./middlewares/Varification')
 const app    = express();
 dotenv.config();
@@ -15,6 +16,8 @@ ConnectDB();
 
 app.post('/signup',Signup)
 app.post('/login',Login)
+app.post('/addPost',CreatePost)
+app.get('/getPost',getPost)
 app.get('/user',(req,res)=>{
      res.json({message:"hello World"});
 })
