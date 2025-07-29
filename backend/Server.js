@@ -2,8 +2,8 @@ const express = require('express')
 const dotenv = require('dotenv');
 const cors = require('cors');
 const ConnectDB = require('./config/ConnectDB')
-const {Signup, Login} = require('./controllers/User.Controller')
-const {CreatePost, getPost, getPostById, deletePost, doLike, addComment} = require('./controllers/Post.Controller')
+const {Signup, Login, getUserById, followUserOrUnfollow, addProfileImage} = require('./controllers/User.Controller')
+const {CreatePost, getPost, getPostById, deletePost, doLike, addComment, deleteComment} = require('./controllers/Post.Controller')
 const varifyToken = require('./middlewares/Varification')
 const app    = express();
 dotenv.config();
@@ -22,6 +22,12 @@ app.put('/doLike/:userId/:postId',doLike)
 app.put('/addComment/:userId/:postId',addComment)
 app.get('/getPostById/:id',getPostById)
 app.delete('/deletePost/:id',deletePost)
+app.delete('/deleteComment/:userId/:postId/:commentId',deleteComment)
+
+app.get('/getUser/:id',getUserById)
+app.put('/uploadProfileImage/:id',addProfileImage)
+app.put('/follow/:userId/:targetId',followUserOrUnfollow)
+
 app.get('/user',(req,res)=>{
      res.json({message:"hello World"});
 })

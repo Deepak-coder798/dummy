@@ -144,6 +144,31 @@ const addComment = async(req,res)=>{
   }
 }
 
+const deleteComment = async (req, res) => {
+  const { userId, postId, commentId } = req.params;
+
+  try {
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    const comment = post.comment.id(commentId);
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
+    if (comment.userId.toString() !== userId) {
+      return res.status(403).json({ message: 'Unauthorized to delete this comment' });
+    }
+
+    await Post.findByIdAndUpdate(postId, {
+      $pull: { comment: { _id: commentId } }
+    });
+
+    return res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
 
 module.exports = {
   CreatePost,
@@ -151,5 +176,6 @@ module.exports = {
   getPostById,
   deletePost,
   doLike,
-  addComment
+  addComment,
+  deleteComment
 }
