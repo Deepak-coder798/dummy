@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from 'axios';
 import { MdDelete } from "react-icons/md";
 import { MdModeEditOutline } from "react-icons/md";
+import { useParams } from "react-router-dom";
 
 const Profile = () => {
     const [posts, setPosts] = useState([]);
@@ -9,7 +10,10 @@ const Profile = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [imageUrl, setImageUrl] = useState('');
-    const userId = localStorage.getItem('userId');
+    var { id } = useParams(); // This will be undefined if path is "/profile"
+    console.log(id)
+    var userId = id || localStorage.getItem('userId'); 
+    const localId = localStorage.getItem('userId');
     const [show, setShow] = useState(false);
     const [modalPost, setModalPost] = useState(null);
     const [user, setUser] = useState(null);
@@ -26,13 +30,12 @@ const Profile = () => {
     useEffect(() => {
         const getUser = async () => {
             try {
-                const id = localStorage.getItem('userId');
-                if (!id) {
+                if (!userId) {
                     console.warn("userId not found in localStorage.");
                     return;
                 }
 
-                const response = await axios.get(`http://localhost:5000/getUser/${id}`);
+                const response = await axios.get(`http://localhost:5000/getUser/${userId}`);
                 if (response && response.status === 200) {
                     setUser(response.data.user);
                 } else {
@@ -44,7 +47,7 @@ const Profile = () => {
         };
 
         getUser();
-    }, [rrr]);
+    }, [userId,rrr]);
 
 
     const addPost = async () => {
@@ -57,7 +60,7 @@ const Profile = () => {
             setImageUrl('');
             setTggle(false);
             // Refresh posts after submission
-            const updatedPosts = await axios.get("http://localhost:5000/getPost");
+            const updatedPosts = await axios.get(`http://localhost:5000/getPostById/${userId}`);
             setPosts(updatedPosts.data.posts);
         } else {
             alert(response.data.message || response.data.error);
@@ -75,7 +78,7 @@ const Profile = () => {
             }
         };
         getData();
-    }, []);
+    }, [userId]);
 
 
     const showModal = (post) => {
@@ -116,7 +119,7 @@ const Profile = () => {
 
     const handleFollow = async(id)=>{
         try{
-         const response = await axios.put(`http://localhost:5000/follow/${userId}/${id}`);
+         const response = await axios.put(`http://localhost:5000/follow/${localId}/${id}`);
          if(response && response.status==200)
          {
             alert(response.data.message);
@@ -156,9 +159,9 @@ const Profile = () => {
                         objectFit: 'cover',
                         marginRight: '40px'
                     }} />
-                    <div onClick={(e) => (setShowImageModal((pre) => !pre))} style={{ height: "28px", width: "28px", borderRadius: "50%", background: "#a06262ff", position: "absolute", top: "10px", right: "50px" }}>
+                   {userId===localId &&  <div onClick={(e) => (setShowImageModal((pre) => !pre))} style={{ height: "28px", width: "28px", borderRadius: "50%", background: "#a06262ff", position: "absolute", top: "10px", right: "50px" }}>
                         <MdModeEditOutline style={{ position: "absolute", top: "6px", right: "5px" }} />
-                    </div>
+                    </div>}
                 </div>
                 <div>
                     <h2 style={{ margin: '0 0 10px 0' }}>{user.name}</h2>
@@ -168,7 +171,7 @@ const Profile = () => {
                         <p style={{ margin: '0', color: '#777' }}>followers: {user.followers.length}</p>
                         <p style={{ margin: '0', color: '#777' }}>following: {user.following.length}</p>
                     </div>
-                    {user._id!==userId?<button onClick={()=>handleFollow(user._id)} style={{padding:"8px 20px", background:"#0408d6ff", color:"white", fontWeight:"600", border:"none", borderRadius:"8px", marginTop:"10px"}}>{ user.followers.find((user) => user._id === userId) ? "Followed" : "Follow"} </button>:null}
+                    {user._id!==localId?<button onClick={()=>handleFollow(user._id)} style={{padding:"8px 20px", background:"#0408d6ff", color:"white", fontWeight:"600", border:"none", borderRadius:"8px", marginTop:"10px"}}>{ user.followers.find((user) => user._id === localId) ? "Followed" : "Follow"} </button>:null}
                 </div>
             </div>
 
@@ -177,7 +180,7 @@ const Profile = () => {
                     padding: "10px 20%",
                     backgroundColor: "#f5f5f5"
                 }}>
-                    <button onClick={() => setTggle(true)} style={{
+                   {userId===localId && <button onClick={() => setTggle(true)} style={{
                         margin: '10px 0',
                         padding: "10px 20px",
                         backgroundColor: "#0095f6",
@@ -185,7 +188,7 @@ const Profile = () => {
                         border: "none",
                         borderRadius: "5px",
                         cursor: "pointer"
-                    }}>+ Post Blog</button>
+                    }}>+ Post Blog</button>}
                     <div style={{
                         display: "grid",
                         gridTemplateColumns: "repeat(3, 1fr)",
@@ -329,7 +332,7 @@ const Profile = () => {
                         </button>
 
                         {/* Delete Button */}
-                        <button
+                       {userId===localId && <button
                             onClick={() => deletePost(modalPost._id)}
                             style={{
                                 position: "absolute",
@@ -344,7 +347,7 @@ const Profile = () => {
                             }}
                         >
                             🗑️ Delete
-                        </button>
+                        </button>}
 
                         {/* Content */}
                         <img

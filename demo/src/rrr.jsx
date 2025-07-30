@@ -7,17 +7,29 @@ import axios from 'axios';
 import { FaHeart } from "react-icons/fa";
 import { FaComment } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [blogPosts, setBlogPosts] = useState([]);
-  const { hello, id, name } = useParams();
-  const location = useLocation();
+  const [allBlogPosts, setAllBlogPosts] = useState([]);
+  const [query, setQuery] = useState('');
   const [show, setShow] = useState(false)
   const [imageUrl, setImageUrl] = useState(null);
   const [toggle, setToggle] = useState(false);
   const userId = localStorage.getItem('userId')
   const [comment, setComment] = useState('');
-  console.log(hello, id, name);
+
+
+  useEffect(()=>{
+       const getPostByUserName = ()=>{
+        const data = query.toLowerCase()
+           const searched = allBlogPosts.filter((post)=>post.userId.name.toLowerCase().includes(data));
+           setBlogPosts(searched);
+       }
+
+       getPostByUserName()
+  },[query])
 
 
   useEffect(() => {
@@ -27,7 +39,7 @@ const Home = () => {
         if (response && response.status === 200) {
           const freshPosts = response.data.posts;
           setBlogPosts(freshPosts);
-
+          setAllBlogPosts(freshPosts);
           // ✅ Update modal content with fresh data directly
           if (imageUrl !== null) {
             const updated = freshPosts.find(post => post._id === imageUrl._id);
@@ -72,27 +84,44 @@ const Home = () => {
 
 
   const deleteComment = async (postId, commentId) => {
-  const confirmDelete = window.confirm("Are you sure you want to delete this comment?");
-  if (!confirmDelete) return;
+    const confirmDelete = window.confirm("Are you sure you want to delete this comment?");
+    if (!confirmDelete) return;
 
-  try {
-    const response = await axios.delete(`http://localhost:5000/deleteComment/${userId}/${postId}/${commentId}`,);
-    if (response.status === 200) {
-      alert(response.data.message);
-      setToggle(prev => !prev); // Refresh comments
+    try {
+      const response = await axios.delete(`http://localhost:5000/deleteComment/${userId}/${postId}/${commentId}`,);
+      if (response.status === 200) {
+        alert(response.data.message);
+        setToggle(prev => !prev); // Refresh comments
+      }
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
+      alert("Something went wrong. Please try again.");
     }
-  } catch (error) {
-    console.error("Failed to delete comment:", error);
-    alert("Something went wrong. Please try again.");
+  };
+
+
+  const openProfile = (id)=>{
+     navigate(`/profile/${id}`);
   }
-};
 
-
+  // console.log(blogPosts)
 
   return (
     <>
       <main className="home" style={{ position: 'relative', left: "0", top: "0" }}>
         <h2>Blog Posts</h2>
+                <div className='boxes'>
+                   <p style={{fontSize:"13px",fontWeight:"700",color:"rgb(124, 124, 128)",marginBottom:"0",padding:"0"}}>Created By</p>
+                   <input
+                   type='text'
+                   value={query}
+                   onChange = {(e)=>setQuery(e.target.value)}
+                  placeholder='All'
+                  style={{textDecoration:"none"}}
+                  >
+                  </input>
+                </div>
+
         <div
           style={{
             display: "grid",
@@ -159,14 +188,46 @@ const Home = () => {
                   padding: "0 16px 16px 16px",
                   fontSize: "0.9rem",
                   color: "#444",
+                  borderTop:"1px solid #ccc"
                 }}
               >
-                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <FaHeart style={{ height: "20px", width: "20px", color: post.like.some((like) => like.userId === userId) ? "red" : "gray" }} onClick={() => doLike(post._id)} /> {post.like.length}
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <FaComment onClick={() => handleModal(post)} /> {post.comment.length}
-                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "0 16px",
+                    marginTop: "12px",
+                  }}
+                >
+                  <img
+                    src={post.userId?.profileImage} // fallback if no image
+                    alt={post.userId?.name || "User"}
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                    onClick={()=>openProfile(post.userId._id)}
+                  />
+                  <span style={{ fontWeight: "bold", color: "#333" }} onClick={()=>openProfile(post.userId._id)}>{post.userId?.name}</span>
+                </div>
+
+                <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "0 16px",
+                    marginTop: "12px",
+                  }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <FaHeart style={{ height: "20px", width: "20px", color: post.like.some((like) => like.userId === userId) ? "red" : "gray" }} onClick={() => doLike(post._id)} /> {post.like.length}
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <FaComment onClick={() => handleModal(post)} /> {post.comment.length}
+                  </span>
+                </div>
               </div>
             </div>
           ))}

@@ -20,18 +20,17 @@ const CreatePost = async (req, res) => {
 
 const getPost = async (req, res) => {
   try {
-    const posts = await Post.find();
-    if (posts) {
+    const posts = await Post.find().populate('userId');
+    if (posts && posts.length > 0) {
       res.status(200).json({ message: "Data Fetched!", posts });
-    }
-    else {
+    } else {
       res.status(404).json({ message: "Data not Found!" });
     }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-  catch (error) {
-    res.status(500).json({ error });
-  }
-}
+};
+
 
 const getPostById = async (req, res) => {
   const userId = req.params.id;
@@ -45,7 +44,7 @@ const getPostById = async (req, res) => {
       res.status(200).json({ message: "Data Fetched!", response });
     }
     else {
-      res.status(404).json({ message: "Data Not Found!" });
+      res.status(200).json({ message: "Data Not Found!",response });
     }
 
   }
