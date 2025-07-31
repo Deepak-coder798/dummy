@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import axios from 'axios';
 import { MdDelete } from "react-icons/md";
 import { MdModeEditOutline } from "react-icons/md";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const Profile = () => {
+    const navigate = useNavigate();
     const [posts, setPosts] = useState([]);
     const [toggle, setTggle] = useState(false);
     const [title, setTitle] = useState('');
@@ -22,7 +23,9 @@ const Profile = () => {
     const [showImageModal, setShowImageModal] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
     const [rrr, setRRR] = useState(false);
-    const [previewImage, setPreviewImage] = useState(null); // preview URL
+    const [previewImage, setPreviewImage] = useState(null);
+    const [showFollowModal, setShowFollowModal] = useState(false);
+    const [followListType, setFollowListType] = useState('');
 
 
     useEffect(() => {
@@ -199,7 +202,7 @@ const Profile = () => {
                 justifyContent: "center",
                 alignItems: 'center',
                 padding: '30px',
-                backgroundColor: '#fff',
+                backgroundColor: '#f9fafb',
                 borderBottom: '1px solid #ddd'
             }}>
                 <div style={{
@@ -221,10 +224,44 @@ const Profile = () => {
                     <p style={{ margin: '0 0 5px 0', color: '#555' }}>{user.email}</p>
                     <div style={{ width: "250px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <p style={{ margin: '0', color: '#777' }}>Posts: {posts.length}</p>
-                        <p style={{ margin: '0', color: '#777' }}>followers: {user.followers.length}</p>
-                        <p style={{ margin: '0', color: '#777' }}>following: {user.following.length}</p>
+                        <p
+                            onClick={() => {
+                                setFollowListType("followers");
+                                setShowFollowModal(true);
+                            }}
+                            style={{ margin: '0', color: '#777', cursor: 'pointer' }}
+                        >
+                            followers: {user.followers.length}
+                        </p>
+
+                        <p
+                            onClick={() => {
+                                setFollowListType("following");
+                                setShowFollowModal(true);
+                            }}
+                            style={{ margin: '0', color: '#777', cursor: 'pointer' }}
+                        >
+                            following: {user.following.length}
+                        </p>
+
                     </div>
-                    {user._id !== localId ? <button onClick={() => handleFollow(user._id)} style={{ padding: "8px 20px", background: "#0408d6ff", color: "white", fontWeight: "600", border: "none", borderRadius: "8px", marginTop: "10px" }}>{user.followers.find((user) => user._id === localId) ? "Followed" : "Follow"} </button> : null}
+                    {user._id !== localId && (
+                        <button
+                            onClick={() => handleFollow(user._id)}
+                            style={{
+                                padding: "8px 20px",
+                                background: user.followers.find(f => f._id.toString() === localId.toString()) ? "#ccc" : "blue",
+                                color: user.followers.find(f => f._id.toString() === localId.toString()) ? "black" : "white",
+                                fontWeight: "600",
+                                border: "none",
+                                borderRadius: "8px",
+                                marginTop: "10px"
+                            }}
+                        >
+                            {user.followers.find(f => f._id.toString() === localId.toString()) ? "Followed" : "Follow"}
+                        </button>
+                    )}
+
                 </div>
             </div>
 
@@ -553,6 +590,93 @@ const Profile = () => {
                     </div>
                 </div>
             )}
+
+            {/*Show Followers and Following*/}
+            {showFollowModal && user && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        zIndex: 1000,
+                    }}
+                    onClick={() => setShowFollowModal(false)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            backgroundColor: "#fff",
+                            borderRadius: "8px",
+                            padding: "20px",
+                            maxHeight: "70vh",
+                            width: "300px",
+                            overflowY: "auto",
+                        }}
+                    >
+                        <h3 style={{ marginTop: 0, marginBottom: 15 }}>
+                            {followListType === "followers" ? "Followers" : "Following"}
+                        </h3>
+                        {user[followListType].length === 0 && (
+                            <p>No {followListType} found.</p>
+                        )}
+                        <ul style={{ listStyleType: "none", padding: 0 }}>
+                            {user[followListType].map((follower) => (
+                                <li
+                                    key={follower._id}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        marginBottom: "10px",
+                                        cursor: "default",
+                                    }}
+                                >
+                                    <img
+                                        src={follower.profileImage}
+                                        alt={follower.name}
+                                        style={{
+                                            width: "30px",
+                                            height: "30px",
+                                            borderRadius: "50%",
+                                            marginRight: "10px",
+                                            objectFit: "cover",
+                                        }}
+                                        onClick={() => {
+                                            navigate(`/profile/${follower._id}`)
+                                            setShowFollowModal(false);
+                                        }}
+                                    />
+                                    <span onClick={() => {
+                                        navigate(`/profile/${follower._id}`)
+                                        setShowFollowModal(false);
+                                    }}>{follower.name}</span>
+                                </li>
+                            ))}
+                        </ul>
+                        <button
+                            onClick={() => setShowFollowModal(false)}
+                            style={{
+                                marginTop: "10px",
+                                padding: "8px 16px",
+                                backgroundColor: "#0095f6",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "5px",
+                                cursor: "pointer",
+                                width: "100%",
+                            }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
 
 
