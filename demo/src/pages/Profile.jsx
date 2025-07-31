@@ -400,7 +400,7 @@ const Profile = () => {
                     boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ margin: 0 }}>New Post</h3>
+                        <h3 style={{ margin: 0 }}>Profile Image</h3>
                         <button onClick={() => setShowImageModal(false)} style={{
                             background: 'transparent',
                             border: 'none',

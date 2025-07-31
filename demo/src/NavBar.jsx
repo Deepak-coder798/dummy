@@ -1,15 +1,33 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React,{useState, useEffect} from 'react';
+import { Link, useNavigate, useLocation} from 'react-router-dom';
 import './NavBar.css'
 import { FiSearch } from "react-icons/fi";
+import axios from 'axios';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [user, setUser] = useState(null);
   const token = localStorage.getItem("token");
 
+
+  useEffect(()=>{
+      const userId = localStorage.getItem('userId');
+    const getUserData = async()=>{
+     const response = await axios.get(`http://localhost:5000/getUser/${userId}`);
+     if(response && response.status==200)
+     {
+      setUser(response.data.user);
+     }
+    }
+
+    getUserData();
+  },[location.state])
+
   const handleLogOut = ()=>{
+    setUser(null);
     localStorage.clear();
-    navigate('/login')
+    navigate('/login', {state:{replace:true}})
   }
 
 
@@ -20,8 +38,8 @@ const Navbar = () => {
         <Link to="/" style={{ textDecoration: 'none' }}> <div className='logo'>Chatterly</div></Link>
         
         <div className='pp'>
-        {token && <><Link to="/profile" style={{ textDecoration: 'none' }}>   <img src='https://c.pxhere.com/photos/c7/42/young_man_portrait_beard_young_man_male_handsome_young_man_handsome-1046502.jpg!d' alt=''></img>  </Link>
-        <Link to="/profile" style={{ textDecoration: 'none' }}>  <p>Deepak Kumar</p>  </Link></>}
+        {token && user && <><Link to="/profile" style={{ textDecoration: 'none' }}>   <img src={user.profileImage} alt=''></img>  </Link>
+        <Link to="/profile" style={{ textDecoration: 'none' }}>  <p>{user.name}</p>  </Link></>}
        {token? <p onClick={()=> handleLogOut()} style={{cursor:"pointer"}}>Log Out</p>:
         <Link style={{textDecoration:"none"}} to={"/login"}><p>Log In</p></Link>}
           </div>
