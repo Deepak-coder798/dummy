@@ -6,6 +6,8 @@ import Signup from './Signup'
 import Login from './Login'
 import Profile from './pages/Profile'
 import ProtectedRoute from './ProtectedRoute'
+import './App.css'
+
 
 const App = ()=>{
 return(
