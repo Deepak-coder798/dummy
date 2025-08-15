@@ -3,6 +3,10 @@ import axios from 'axios';
 import { MdDelete } from "react-icons/md";
 import { MdModeEditOutline } from "react-icons/md";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaHeart } from "react-icons/fa";
+import { FaComment } from "react-icons/fa";
+import { IoMdSend } from "react-icons/io";
+import { AiFillMessage } from "react-icons/ai";
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -26,6 +30,7 @@ const Profile = () => {
     const [previewImage, setPreviewImage] = useState(null);
     const [showFollowModal, setShowFollowModal] = useState(false);
     const [followListType, setFollowListType] = useState('');
+    const [comment, setComment] = useState('');
 
 
     useEffect(() => {
@@ -97,12 +102,55 @@ const Profile = () => {
     };
 
 
+    const doLike = async (id) => {
+        const response = await axios.put(`http://localhost:5000/doLike/${localId}/${id}`);
+        if (response && response.status == 200) {
+            setRRR((pre) => !pre);
+        }
+
+    }
+
+    const addComment = async (id) => {
+        if (!comment) {
+            return alert("First Write Comment!");
+        }
+        const response = await axios.put(`http://localhost:5000/addComment/${localId}/${id}`, { comment });
+        if (response && response.status == 200) {
+            setRRR((pre) => !pre);
+            alert(response.data.message);
+            setComment('');
+        }
+    }
+
+
+    const deleteComment = async (postId, commentId) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this comment?");
+        if (!confirmDelete) return;
+
+        try {
+            const response = await axios.delete(`http://localhost:5000/deleteComment/${localId}/${postId}/${commentId}`,);
+            if (response.status === 200) {
+                alert(response.data.message);
+                setRRR(prev => !prev); // Refresh comments
+            }
+        } catch (error) {
+            console.error("Failed to delete comment:", error);
+            alert("Something went wrong. Please try again.");
+        }
+    };
+
+
     useEffect(() => {
         const getData = async () => {
             const response = await axios.get(`http://localhost:5000/getPostById/${userId}`);
             if (response && response.status === 200) {
                 setPosts(response.data.response);
                 console.log(response);
+                if (modalPost !== null) {
+                    const updated = response?.data?.response.find(post => post._id === modalPost._id);
+                    if (updated) setModalPost(updated);
+                }
+
             } else {
                 console.log(response.data.message || response.data.error);
             }
@@ -192,6 +240,14 @@ const Profile = () => {
 
     }
 
+    const openChatPage = async(userId)=>{
+        const response = await axios.post('http://localhost:5000/api/conversation',{receiverId:userId, me:localId});
+        if(response && response.status==200)
+        {
+            navigate(`/direct/${userId}`);
+        }
+    }
+
     console.log(user)
 
     return (
@@ -243,9 +299,11 @@ const Profile = () => {
                         >
                             following: {user.following.length}
                         </p>
+                         
 
                     </div>
                     {user._id !== localId && (
+                        <div style={{display:"flex", alignItems:"center"}}>
                         <button
                             onClick={() => handleFollow(user._id)}
                             style={{
@@ -255,11 +313,21 @@ const Profile = () => {
                                 fontWeight: "600",
                                 border: "none",
                                 borderRadius: "8px",
-                                marginTop: "10px"
+                                marginTop: "10px",
+                                marginRight:"15px"
                             }}
                         >
                             {user.followers.find(f => f._id.toString() === localId.toString()) ? "Followed" : "Follow"}
                         </button>
+                        <p
+                            onClick={() => {
+                                openChatPage(userId);
+                            }}
+                            style={{ margin: '0', color: '#777', cursor: 'pointer' }}
+                        >
+                            <AiFillMessage size={35}/>
+                        </p>
+                        </div> 
                     )}
 
                 </div>
@@ -404,95 +472,173 @@ const Profile = () => {
 
             {/* View Post */}
             {show && (
-                <div
-                    style={{
-                        position: "fixed",
-                        zIndex: 1000,
-                        width: "100vw",
-                        height: "100vh",
-                        background: "rgba(0,0,0,0.6)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        left: 0,
-                        top: 0,
-                    }}
-                >
-                    <div
-                        style={{
-                            height: "80%",
-                            width: "90%",
-                            maxWidth: "600px",
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                            position: "relative",
-                            display: "flex",
-                            flexDirection: "column",
-                            padding: "20px",
-                            overflowY: "auto",
-                        }}
-                    >
+                <div style={{
+                    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+                    background: "rgba(0,0,0,0.6)", display: "flex", justifyContent: "center", alignItems: "center",
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        height: "70%", width: "80%", background: "#fff", borderRadius: 12,
+                        display: "flex", position: "relative", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+                    }}>
+                        {/* Delete Post Button (Top Left) */}
+                        {modalPost.userId?._id?.toString() === localId && (
+                            <button
+                                onClick={() => deletePost(modalPost._id)}
+                                style={{
+                                    position: "absolute",
+                                    top: 10,
+                                    left: 10,
+                                    background: "#dc3545",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    padding: "6px 10px",
+                                    cursor: "pointer",
+                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+                                }}
+                                title="Delete Post"
+                            >
+                                Delete
+                            </button>
+                        )}
+
+
                         {/* Close Button */}
-                        <button
-                            onClick={() => {
-                                setModalPost(null);
-                                setShow((prev) => !prev);
-                            }}
-                            style={{
-                                position: "absolute",
-                                top: "10px",
-                                right: "10px",
-                                background: "transparent",
-                                border: "none",
-                                fontSize: "20px",
-                                cursor: "pointer",
-                            }}
-                            aria-label="Close modal"
-                        >
-                            ❌
-                        </button>
+                        <button onClick={() => {
+                            setModalPost(null);
+                            setShow(prev => !prev);
+                        }} style={{
+                            position: "absolute", top: 10, right: 10, background: "transparent",
+                            border: "none", fontSize: 20, cursor: "pointer"
+                        }}>✕</button>
 
-                        {/* Delete Button */}
-                        {userId === localId && <button
-                            onClick={() => deletePost(modalPost._id)}
-                            style={{
-                                position: "absolute",
-                                top: "10px",
-                                left: "10px",
-                                background: "red",
-                                border: "none",
-                                color: "white",
-                                borderRadius: "4px",
-                                padding: "6px 10px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            🗑️ Delete
-                        </button>}
+                        {/* Left Side: Image and Details */}
+                        <div style={{
+                            width: "50%", padding: "20px", borderRight: "1px solid #eee",
+                            display: "flex", flexDirection: "column", alignItems: "center", overflowY: "auto"
+                        }}>
+                            <img src={modalPost.imageUrl} alt="preview" style={{
+                                width: "100%", maxHeight: "300px", objectFit: "cover", borderRadius: 8, marginBottom: 16
+                            }} />
+                            <h3 style={{ margin: "0 0 10px", fontSize: "1.2rem" }}>{modalPost.title}</h3>
+                            <p style={{ marginBottom: 16, color: "#555" }}>{modalPost.description}</p>
 
-                        {/* Content */}
-                        <img
-                            src={modalPost.imageUrl}
-                            alt={modalPost.title}
-                            style={{
-                                width: "100%",
-                                height: "300px",
-                                objectFit: "cover",
-                                borderRadius: "8px",
-                                marginBottom: "16px",
-                                marginTop: "25px"
-                            }}
-                        />
-                        <h2 style={{ marginBottom: "8px" }}>{modalPost.title}</h2>
-                        <p style={{ marginBottom: "16px", color: "#444" }}>
-                            {modalPost.description}
-                        </p>
+                            {/* Likes and Comments */}
+                            <div style={{ display: "flex", gap: "20px", marginTop: "auto" }}>
+                                <span style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                                    <FaHeart
+                                        onClick={() => doLike(modalPost._id)}
+                                        style={{
+                                            color: modalPost.like.some(like => like.userId === localId) ? "red" : "gray",
+                                            height: "20px", width: "20px"
+                                        }}
+                                    />
+                                    {modalPost.like.length}
+                                </span>
+                                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <FaComment />
+                                    {modalPost.comment.length}
+                                </span>
+                            </div>
+                        </div>
 
-                        {/* Stats */}
-                        <div style={{ display: "flex", gap: "20px", fontWeight: "500" }}>
-                            <span>👍 Likes: {modalPost.like.length}</span>
-                            <span>💬 Comments: {modalPost.comment.length}</span>
+                        {/* Right Side: Comments */}
+                        <div style={{
+                            width: "50%", display: "flex", flexDirection: "column", justifyContent: "space-between"
+                        }}>
+                            {/* Header */}
+                            <div style={{
+                                padding: "15px 20px", display: "flex", alignItems: "center",
+                                borderBottom: "1px solid #ccc"
+                            }}>
+                                <img
+                                    src={modalPost.userId.profileImage}
+                                    alt="user"
+                                    style={{ height: 40, width: 40, borderRadius: "50%", marginRight: 10 }}
+                                />
+                                <h4 style={{ margin: 0 }}>{modalPost.userId.name}</h4>
+                            </div>
+
+                            {/* Comments */}
+                            <div style={{
+                                flex: 1, padding: "20px", overflowY: "auto"
+                            }}>
+                                {modalPost.comment.map((cmt, idx) => (
+                                    <div
+                                        key={idx}
+                                        style={{
+                                            marginBottom: "12px",
+                                            borderBottom: "1px solid #eee",
+                                            paddingBottom: "10px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "10px"
+                                        }}
+                                    >
+                                        {/* Profile Image */}
+                                        <img
+                                            src={cmt.userId?.profileImage || "/default-avatar.png"} // fallback image
+                                            alt={cmt.userId?.name || "User"}
+                                            style={{
+                                                width: "35px",
+                                                height: "35px",
+                                                borderRadius: "50%",
+                                                objectFit: "cover",
+                                                border: "1px solid #ddd"
+                                            }}
+                                        />
+
+                                        {/* Name + Comment */}
+                                        <div style={{ flex: 1 }}>
+                                            <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px", color: "#222" }}>
+                                                {cmt.userId?.name || "Unknown User"}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: "14px", color: "#333" }}>{cmt.cmt}</p>
+                                        </div>
+
+                                        {/* Delete Button */}
+                                        {cmt.userId?._id?.toString() === localId && (
+                                            <span
+                                                onClick={() => deleteComment(modalPost._id, cmt._id)}
+                                                style={{
+                                                    cursor: "pointer",
+                                                    fontSize: "16px",
+                                                    color: "#dc3545"
+                                                }}
+                                                title="Delete Comment"
+                                            >
+                                                🗑️
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+
+
+                            </div>
+
+                            {/* Comment Input */}
+                            <div style={{
+                                padding: "15px 20px", borderTop: "1px solid #eee", display: "flex", alignItems: "center",
+                                background: "#f9f9f9"
+                            }}>
+                                <input
+                                    type='text'
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder="Write a comment..."
+                                    style={{
+                                        flex: 1, padding: "10px 12px", borderRadius: "6px", border: "1px solid #ccc",
+                                        marginRight: "10px", fontSize: "14px"
+                                    }}
+                                />
+                                <IoMdSend
+                                    onClick={() => addComment(modalPost._id)}
+                                    style={{ fontSize: "20px", color: "#007bff", cursor: "pointer" }}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -676,11 +822,6 @@ const Profile = () => {
                     </div>
                 </div>
             )}
-
-
-
-
-
         </>
     );
 };

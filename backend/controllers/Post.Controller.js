@@ -20,7 +20,15 @@ const CreatePost = async (req, res) => {
 
 const getPost = async (req, res) => {
   try {
-    const posts = await Post.find().populate('userId');
+    const posts = await Post.find()
+    .populate({
+      path:'userId',
+      select:'name profileImage'
+    })
+    .populate({
+        path: 'comment.userId',
+        select: 'name profileImage'
+      });
     if (posts && posts.length > 0) {
       res.status(200).json({ message: "Data Fetched!", posts });
     } else {
@@ -36,9 +44,17 @@ const getPostById = async (req, res) => {
   const userId = req.params.id;
   console.log("userId", userId);
   try {
-    const posts = await Post.find();
+    const posts = await Post.find()
+    .populate({
+      path:'userId',
+      select:'name profileImage'
+    })
+    .populate({
+        path: 'comment.userId',
+        select: 'name profileImage'
+      });
     console.log("POSTS", posts);
-    const response = await posts.filter((post) => post.userId.toString() === userId.toString());
+    const response = await posts.filter((post) => post.userId._id.toString() === userId.toString());
     console.log("res:", response);
     if (response.length > 0) {
       res.status(200).json({ message: "Data Fetched!", response });

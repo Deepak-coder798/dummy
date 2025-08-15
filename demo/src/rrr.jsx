@@ -21,15 +21,15 @@ const Home = () => {
   const [comment, setComment] = useState('');
 
 
-  useEffect(()=>{
-       const getPostByUserName = ()=>{
-        const data = query.toLowerCase()
-           const searched = allBlogPosts.filter((post)=>post.userId.name.toLowerCase().includes(data));
-           setBlogPosts(searched);
-       }
+  useEffect(() => {
+    const getPostByUserName = () => {
+      const data = query.toLowerCase()
+      const searched = allBlogPosts.filter((post) => post.userId.name.toLowerCase().includes(data));
+      setBlogPosts(searched);
+    }
 
-       getPostByUserName()
-  },[query])
+    getPostByUserName()
+  }, [query])
 
 
   useEffect(() => {
@@ -100,27 +100,27 @@ const Home = () => {
   };
 
 
-  const openProfile = (id)=>{
-     navigate(`/profile/${id}`);
+  const openProfile = (id) => {
+    navigate(`/profile/${id}`);
   }
 
-  // console.log(blogPosts)
+  console.log(blogPosts)
 
   return (
     <>
       <main className="home" style={{ position: 'relative', left: "0", top: "0" }}>
         <h2>Blog Posts</h2>
-                <div className='boxes'>
-                   <p style={{fontSize:"13px",fontWeight:"700",color:"rgb(124, 124, 128)",marginBottom:"0",padding:"0"}}>Created By</p>
-                   <input
-                   type='text'
-                   value={query}
-                   onChange = {(e)=>setQuery(e.target.value)}
-                  placeholder='All'
-                  style={{textDecoration:"none"}}
-                  >
-                  </input>
-                </div>
+        <div className='boxes'>
+          <p style={{ fontSize: "13px", fontWeight: "700", color: "rgb(124, 124, 128)", marginBottom: "0", padding: "0" }}>Created By</p>
+          <input
+            type='text'
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder='All'
+            style={{ textDecoration: "none" }}
+          >
+          </input>
+        </div>
 
         <div
           style={{
@@ -188,7 +188,7 @@ const Home = () => {
                   padding: "0 16px 16px 16px",
                   fontSize: "0.9rem",
                   color: "#444",
-                  borderTop:"1px solid #ccc"
+                  borderTop: "1px solid #ccc"
                 }}
               >
                 <div
@@ -209,18 +209,18 @@ const Home = () => {
                       borderRadius: "50%",
                       objectFit: "cover",
                     }}
-                    onClick={()=>openProfile(post.userId._id)}
+                    onClick={() => openProfile(post.userId._id)}
                   />
-                  <span style={{ fontWeight: "bold", color: "#333" }} onClick={()=>openProfile(post.userId._id)}>{post.userId?.name}</span>
+                  <span style={{ fontWeight: "bold", color: "#333" }} onClick={() => openProfile(post.userId._id)}>{post.userId?.name}</span>
                 </div>
 
                 <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    padding: "0 16px",
-                    marginTop: "12px",
-                  }}>
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "0 16px",
+                  marginTop: "12px",
+                }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <FaHeart style={{ height: "20px", width: "20px", color: post.like.some((like) => like.userId === userId) ? "red" : "gray" }} onClick={() => doLike(post._id)} /> {post.like.length}
                   </span>
@@ -248,6 +248,28 @@ const Home = () => {
             height: "70%", width: "80%", background: "#fff", borderRadius: 12,
             display: "flex", position: "relative", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
           }}>
+            {imageUrl.userId?._id?.toString() === userId && (
+              <button
+                onClick={() => deletePost(modalPost._id)}
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  left: 10,
+                  background: "#dc3545",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+                }}
+                title="Delete Post"
+              >
+                Delete
+              </button>
+            )}
             {/* Close Button */}
             <button onClick={() => {
               setImageUrl(null);
@@ -294,14 +316,14 @@ const Home = () => {
               {/* Header */}
               <div style={{
                 padding: "15px 20px", display: "flex", alignItems: "center",
-                borderBottom: "1px solid #eee"
+                borderBottom: "1px solid #ccc"
               }}>
                 <img
-                  src='data:image/jpeg;base64,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'
+                  src={imageUrl.userId.profileImage}
                   alt="user"
                   style={{ height: 40, width: 40, borderRadius: "50%", marginRight: 10 }}
                 />
-                <h4 style={{ margin: 0 }}>Deepak Kumar</h4>
+                <h4 style={{ margin: 0 }}>{imageUrl.userId.name}</h4>
               </div>
 
               {/* Comments */}
@@ -312,22 +334,43 @@ const Home = () => {
                   <div
                     key={idx}
                     style={{
-                      marginBottom: "10px",
+                      marginBottom: "12px",
                       borderBottom: "1px solid #eee",
-                      paddingBottom: "8px",
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
+                      paddingBottom: "10px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px"
                     }}
                   >
-                    <p style={{ margin: 0, fontSize: "14px", color: "#333" }}>{cmt.cmt}</p>
-                    {cmt.userId === userId && (
+                    {/* Profile Image */}
+                    <img
+                      src={cmt.userId?.profileImage || "/default-avatar.png"} // fallback image
+                      alt={cmt.userId?.name || "User"}
+                      style={{
+                        width: "35px",
+                        height: "35px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: "1px solid #ddd"
+                      }}
+                    />
+
+                    {/* Name + Comment */}
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px", color: "#222" }}>
+                        {cmt.userId?.name || "Unknown User"}
+                      </p>
+                      <p style={{ margin: 0, fontSize: "14px", color: "#333" }}>{cmt.cmt}</p>
+                    </div>
+
+                    {/* Delete Button */}
+                    {cmt.userId?._id?.toString() === userId && (
                       <span
                         onClick={() => deleteComment(imageUrl._id, cmt._id)}
                         style={{
-                          cursor: 'pointer',
-                          fontSize: '16px',
-                          color: '#dc3545',
+                          cursor: "pointer",
+                          fontSize: "16px",
+                          color: "#dc3545"
                         }}
                         title="Delete Comment"
                       >
@@ -336,6 +379,7 @@ const Home = () => {
                     )}
                   </div>
                 ))}
+
 
               </div>
 
