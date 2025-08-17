@@ -258,7 +258,7 @@ const CLOUDINARY_UPLOAD_PRESET = "BlogApp"; // change
 const CLOUDINARY_CLOUD_NAME = "daxfgrt9j"; // change
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
-const socket = io(API_URL, { transports: ["websocket"] });
+const socket = io(API_URL);
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -305,6 +305,7 @@ export default function ChatPage() {
       const res = await axios.get(
         `${API_URL}/api/message/${selectedConversation.conversationId._id}`
       );
+      socket.emit('joinConversation',selectedConversation.conversationId._id)
       setMessages(res.data);
     };
     fetchMessages();
@@ -334,7 +335,6 @@ export default function ChatPage() {
     };
 
     const res = await axios.post(`${API_URL}/api/message`, msgData);
-    setMessages((prev) => [...prev, res.data]);
     setNewMsg("");
   };
 
